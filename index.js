@@ -84,16 +84,31 @@ async function run() {
 
         // Add Orders API
         app.get('/orders', verifyToken, async (req, res) => {
+
             const email = req.query.email;
-            if (req.decodedUserEmail === email) {
-                const query = { email: email };
-                const cursor = orderCollection.find(query);
-                const orders = await cursor.toArray();
-                res.json(orders);
-            }
-            else {
-                res.status(401).json({ message: 'User not authorized' })
-            }
+            console.log("Email: ", email);
+            console.log("Decoded User Email: ", req.decodedUserEmail);
+
+            const query = { email: email };
+            console.log("Query: ", query);
+
+            const cursor = orderCollection.find(query);
+            console.log("Cursor: ", cursor);
+
+            const orders = await cursor.toArray();
+            console.log("Orders: ", orders);
+
+            res.json(orders);
+
+            // if (req.decodedUserEmail === email) {
+            //     const query = { email: email };
+            //     const cursor = orderCollection.find(query);
+            //     const orders = await cursor.toArray();
+            //     res.json(orders);
+            // }
+            // else {
+            //     res.status(401).json({ message: `User not authorized, email: ${email}` })
+            // }
 
         });
 
@@ -113,9 +128,16 @@ async function run() {
         app.get('/users/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email: email };
+
+            console.log("User Query: ", query);
+
             const user = await usersCollection.findOne(query);
+
+            console.log("User: ", user);
+
             let isAdmin = false;
             if (user?.role === 'admin') {
+                console.log("hehe admin");
                 isAdmin = true;
             }
             res.json({ admin: isAdmin });
@@ -137,20 +159,25 @@ async function run() {
             res.json(result);
         });
 
-        app.put('/users/admin', verifyToken, async (req, res) => {
-            const email = req.body;
-            const filter = { email: user.email };
-            const updateDoc = { $set: { role: 'admin' } };
-            const result = await usersCollection.updateOne(filter, updateDoc);
-            res.json(result);
-        })
+        // app.put('/users/admin', verifyToken, async (req, res) => {
+        //     const email = req.body;
+        //     const filter = { email: user.email };
+        //     const updateDoc = { $set: { role: 'admin' } };
+        //     const result = await usersCollection.updateOne(filter, updateDoc);
+        //     res.json(result);
+        // })
 
         app.put('/users/admin', verifyToken, async (req, res) => {
             const user = req.body;
-            const requester = req.decodedEmail;
+
+            console.log("Req: ", req.body);
+            // const requester = req.decodedEmail;
+            const requester = req.body.requester_email;
+
+            console.log("Requester: ", req.body.requester_email);
+
             if (requester) {
                 const requesterAccount = await usersCollection.findOne({ email: requester });
-                console.log(req.decodedEmail);
                 if (requesterAccount.role === 'admin') {
                     const filter = { email: user.email };
                     const updateDoc = { $set: { role: 'admin' } };
